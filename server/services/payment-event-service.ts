@@ -26,6 +26,9 @@ const toPaymentEvent = (
   },
 })
 
+const isShopSession = (session: Stripe.Checkout.Session): boolean =>
+  isUuid(session.client_reference_id)
+
 export class PaymentEventService {
   constructor(
     private readonly events: PaymentEventRepository,
@@ -39,7 +42,7 @@ export class PaymentEventService {
         return this.onPaid(event, event.data.object)
       case "checkout.session.expired":
       case "checkout.session.async_payment_failed":
-        return this.events.releaseExpired(toPaymentEvent(event, event.data.object))
+        return this.onExpired(event, event.data.object)
       case "refund.created":
       case "refund.updated":
       case "refund.failed":
@@ -53,6 +56,7 @@ export class PaymentEventService {
     event: Stripe.Event,
     session: Stripe.Checkout.Session
   ): Promise<string> {
+    if (!isShopSession(session)) return "ignored"
     if (session.payment_status !== "paid") return "awaiting_payment"
 
     const outcome = await this.events.fulfillPaid({
@@ -60,12 +64,16 @@ export class PaymentEventService {
       paymentIntentId: idOf(session.payment_intent),
     })
 
-    if (outcome === "unknown_order") {
-      console.error(`Stripe event ${event.id}: paid session ${session.id} has no order`)
-    }
-
     await this.refunds.settleForSession(session.id)
     return outcome
+  }
+
+  private async onExpired(
+    event: Stripe.Event,
+    session: Stripe.Checkout.Session
+  ): Promise<string> {
+    if (!isShopSession(session)) return "ignored"
+    return this.events.releaseExpired(toPaymentEvent(event, session))
   }
 
   private onRefund(event: Stripe.Event, refund: Stripe.Refund): Promise<string> {

@@ -1,6 +1,5 @@
 export type FulfillOutcome =
   | "duplicate_event"
-  | "unknown_order"
   | "paid"
   | "already_paid"
   | "paid_after_expiry"
@@ -9,7 +8,6 @@ export type FulfillOutcome =
 
 export type ReleaseOutcome =
   | "duplicate_event"
-  | "unknown_order"
   | "released"
   | "noop"
 

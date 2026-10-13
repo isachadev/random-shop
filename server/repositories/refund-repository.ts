@@ -34,7 +34,6 @@ export type RefundRecordOutcome =
   | "failed"
   | "parked"
   | "conflict"
-  | "ignored"
 
 export interface RefundRepository {
   request(orderId: string, userId: string, maxAgeDays: number): Promise<RefundRequest>
