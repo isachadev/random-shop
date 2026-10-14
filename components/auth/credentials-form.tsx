@@ -11,16 +11,18 @@ import { validateCredentials } from "@/lib/validation/credentials"
 interface CredentialsFormProps {
   submitLabel: string
   passwordAutoComplete: "current-password" | "new-password"
+  initialCredentials?: Credentials
   onSubmit(credentials: Credentials): Promise<Result<unknown>>
 }
 
 export function CredentialsForm({
   submitLabel,
   passwordAutoComplete,
+  initialCredentials,
   onSubmit,
 }: CredentialsFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState(initialCredentials?.email ?? "")
+  const [password, setPassword] = useState(initialCredentials?.password ?? "")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
